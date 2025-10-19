@@ -280,35 +280,30 @@ class ImageCapturePage(QWidget):
         q_image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
         return QPixmap.fromImage(q_image)
 
-    def on_capture_clicked(self):
+        def on_capture_clicked(self):
         """Mengambil gambar diam dari stream yang aktif."""
         frame_rgb = None
-
+        
         if self.picam:
-            self.timer.stop() # Hentikan preview
-            print("Mengambil foto resolusi penuh (3280x2464)...")
+            self.timer.stop()  # Hentikan preview
+            print("Mengambil foto resolusi penuh (main stream)...")
             try:
-                # Ambil dari stream "lores" (warna seperti live preview)
-                frame_rgb = self.picam.capture_array("lores")
-
-                # Pastikan frame punya 3 channel
-                if frame_rgb.ndim == 2:  # grayscale
-                    frame_rgb = cv2.cvtColor(frame_rgb, cv2.COLOR_GRAY2RGB)
-                elif frame_rgb.shape[2] == 4:  # kadang ada alpha
-                    frame_rgb = cv2.cvtColor(frame_rgb, cv2.COLOR_BGRA2RGB)
-
-                # Konversi ke pixmap
-                self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb)
+                # Ambil dari stream "main" (resolusi penuh dan warna asli)
+                frame_rgb = self.picam.switch_mode_and_capture_array("main")
+                
+                # Resize agar tetap sesuai display (opsional)
+                frame_rgb_resized = cv2.resize(frame_rgb, (640, 480), interpolation=cv2.INTER_LINEAR)
+                
+                self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb_resized)
                 self.video_display.setPixmap(self.captured_pixmap.scaled(
                     self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
                 ))
-
-                print("Foto Picamera2 berhasil diambil.")
+                print("Foto Picamera2 berhasil diambil dengan warna normal.")
             except Exception as e:
-                QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto: {e}")
-                self.timer.start(30) # Mulai lagi preview jika gagal
+                QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto full-res: {e}")
+                self.timer.start(30)  # Mulai lagi preview jika gagal
                 return
-
+            
         elif self.capture and self.capture.isOpened():
             print("Mengambil foto dari OpenCV...")
             ret, frame = self.capture.read()
@@ -317,13 +312,6 @@ class ImageCapturePage(QWidget):
                 return
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_rgb = cv2.flip(frame_rgb, 1)
-
-            # Pastikan frame punya 3 channel (seharusnya sudah)
-            if frame_rgb.ndim == 2:
-                frame_rgb = cv2.cvtColor(frame_rgb, cv2.COLOR_GRAY2RGB)
-            elif frame_rgb.shape[2] == 4:
-                frame_rgb = cv2.cvtColor(frame_rgb, cv2.COLOR_BGRA2RGB)
-
             self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb)
             self.video_display.setPixmap(self.captured_pixmap.scaled(
                 self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
@@ -333,7 +321,8 @@ class ImageCapturePage(QWidget):
             QMessageBox.warning(self, "Kamera Error", "Kamera tidak aktif.")
             return
 
-        self.stop_camera()
+        # Jangan stop_camera() di sini supaya on_next_clicked bisa memeriksa captured_pixmap
+        # self.stop_camera()
 
     def on_upload_clicked(self):
         """Buka dialog file untuk memilih gambar."""
