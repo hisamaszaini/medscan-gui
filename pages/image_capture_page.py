@@ -177,7 +177,7 @@ class ImageCapturePage(QWidget):
                 
                 # Konfigurasi 2-stream untuk kualitas tinggi
                 config = self.picam.create_still_configuration(
-                    main={"size": (3280, 2464)},
+                    main={"size": (640, 480)},
                     lores={"size": (640, 480)},
                     display="lores"
                 )
@@ -315,7 +315,6 @@ class ImageCapturePage(QWidget):
         self.video_display.setPixmap(self.captured_pixmap.scaled(
             self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         ))
-
 
     def on_upload_clicked(self):
         """Buka dialog file untuk memilih gambar."""
