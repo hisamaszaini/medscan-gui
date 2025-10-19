@@ -166,14 +166,14 @@ class ImageCapturePage(QWidget):
                 self.picam = Picamera2(camera_num=camera_num)
                 config = self.picam.create_preview_configuration(main={"size": (640, 480)})
                 self.picam.configure(config)
+                self.picam.start()
                 self.picam.set_controls({
                     "AwbEnable": True,
         			"AwbMode": "auto",
         			"AeEnable": True,
         			"AnalogueGain": 1.0,
-                    "ExposureTime": 20000
+ 			       "ExposureTime": 20000
     			})
-                self.picam.start()
                 self.capture_button.setEnabled(True)
                 self.timer.timeout.connect(self.update_frame_picam)
                 self.timer.start(30)
