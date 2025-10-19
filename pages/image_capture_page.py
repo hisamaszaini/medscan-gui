@@ -163,7 +163,7 @@ class ImageCapturePage(QWidget):
 
         if PICAMERA_AVAILABLE:
             try:
-                self.picam = Picamera2(camera_num)
+                self.picam = Picamera2()
                 config = self.picam.create_preview_configuration(main={"size": (640, 480)})
                 self.picam.configure(config)
                 self.picam.start()
