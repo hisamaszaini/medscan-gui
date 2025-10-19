@@ -290,6 +290,10 @@ class ImageCapturePage(QWidget):
             try:
                 # Ambil dari stream "main" (resolusi penuh)
                 frame_rgb = self.picam.capture_array("lores") 
+                self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb)
+                self.video_display.setPixmap(self.captured_pixmap.scaled(
+                    self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    ))
                 print("Foto Picamera2 berhasil diambil.")
             except Exception as e:
                 QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto full-res: {e}")
