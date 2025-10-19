@@ -177,8 +177,8 @@ class ImageCapturePage(QWidget):
                 
                 # Konfigurasi 2-stream untuk kualitas tinggi
                 config = self.picam.create_still_configuration(
-                    main={"size": (3280, 2464)},  # Foto full-res (8MP IMX219)
-                    lores={"size": (640, 480), "format": "RGB888"}, # Preview GUI
+                    main={"size": (3280, 2464), "format": "RGB888"},
+                    lores={"size": (640, 480), "format": "RGB888"},
                     display="lores"
                 )
                 self.picam.configure(config)
@@ -309,7 +309,6 @@ class ImageCapturePage(QWidget):
             QMessageBox.warning(self, "Kamera Error", "Kamera tidak aktif.")
             return
 
-        # Hentikan kamera SETELAH gambar berhasil diambil
         self.stop_camera()
 
         self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb)
