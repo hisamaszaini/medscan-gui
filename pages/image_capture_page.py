@@ -289,7 +289,7 @@ class ImageCapturePage(QWidget):
             print("Mengambil foto resolusi penuh (3280x2464)...")
             try:
                 # Ambil dari stream "main" (resolusi penuh)
-                frame_rgb = self.picam.switch_mode_and_capture_array("main")
+                frame_rgb = self.picam.capture_array("lores") 
                 print("Foto Picamera2 berhasil diambil.")
             except Exception as e:
                 QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto full-res: {e}")
