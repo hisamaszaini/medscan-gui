@@ -177,8 +177,8 @@ class ImageCapturePage(QWidget):
                 
                 # Konfigurasi 2-stream untuk kualitas tinggi
                 config = self.picam.create_still_configuration(
-                    main={"size": (3280, 2464), "format": "RGB888"},
-                    lores={"size": (640, 480), "format": "RGB888"},
+                    main={"size": (3280, 2464)},
+                    lores={"size": (640, 480)},
                     display="lores"
                 )
                 self.picam.configure(config)
