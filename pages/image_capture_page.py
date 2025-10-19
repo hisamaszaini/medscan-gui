@@ -280,7 +280,7 @@ class ImageCapturePage(QWidget):
         q_image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
         return QPixmap.fromImage(q_image)
 
-        def on_capture_clicked(self):
+    def on_capture_clicked(self):
         """Mengambil gambar diam dari stream yang aktif."""
         frame_rgb = None
         
