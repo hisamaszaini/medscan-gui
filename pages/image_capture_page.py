@@ -153,6 +153,7 @@ class ImageCapturePage(QWidget):
 
 		self.stop_camera()
 
+		# Pilih camera index berdasarkan screening type
 		camera_index = 1 if screening_type == "diabetic_retinopathy" else 0
 
 		try:
@@ -161,8 +162,9 @@ class ImageCapturePage(QWidget):
 			pass
 
 		if PICAMERA_AVAILABLE:
+			camera_name = "camera1" if camera_index == 1 else "camera0"
 			try:
-				self.picam = Picamera2()
+				self.picam = Picamera2(camera_name=camera_name)
 				config = self.picam.create_preview_configuration(main={"size": (640, 480)})
 				self.picam.configure(config)
 				self.picam.start()
@@ -172,7 +174,6 @@ class ImageCapturePage(QWidget):
 			except Exception as e:
 				self.video_display.setText(f"Gagal membuka Picamera2: {e}\nMencoba OpenCV...")
 				self.capture_button.setEnabled(False)
-
 				self.capture = cv2.VideoCapture(camera_index)
 				if not self.capture.isOpened():
 					self.video_display.setText("Error: Gagal membuka kamera.")
