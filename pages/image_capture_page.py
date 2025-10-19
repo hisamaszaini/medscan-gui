@@ -12,7 +12,7 @@ from components.header import Header
 
 try:
     from picamera2 import Picamera2
-    PICAMERA_AVAILABLE = True
+    PICAMERA_AVAILABLE = False
 except ImportError:
     PICAMERA_AVAILABLE = False
 
