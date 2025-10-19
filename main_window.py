@@ -13,7 +13,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("MedScan AI Screening")
-        self.setGeometry(100, 100, 1280, 900)
+        # self.setGeometry(100, 100, 1280, 900)
+        self.showMaximized()
 
         # State Aplikasi
         self.current_screening_type = None

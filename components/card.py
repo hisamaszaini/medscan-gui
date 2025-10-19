@@ -41,6 +41,10 @@ class ScreeningChoiceCard(QWidget):
         self.description_label.setFont(QFont("Segoe UI", 11))
         self.description_label.setWordWrap(True)
 
+        r = int(self.color[1:3], 16)
+        g = int(self.color[3:5], 16)
+        b = int(self.color[5:7], 16)
+
         self.button = QPushButton("Mulai Screening")
         self.button.clicked.connect(lambda: self.screeningSelected.emit(self.type))
         self.button.setStyleSheet(f"""
@@ -50,7 +54,7 @@ class ScreeningChoiceCard(QWidget):
                 border: none;
             }}
             QPushButton:hover {{
-                background-color: {self.color}CC;
+                background-color: rgba({r}, {g}, {b}, 0.8);
             }}
         """)
 
