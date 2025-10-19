@@ -1,0 +1,95 @@
+QWidget {
+    background-color: #F9FAFB;
+    color: #1F2937;
+    font-family: 'Segoe UI', 'Inter', sans-serif;
+}
+
+QLabel#h1 {
+    font-size: 48px;
+    font-weight: 800;
+    color: #111827;
+}
+QLabel#h2 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #111827;
+}
+QLabel#p {
+    font-size: 16px;
+    color: #4B5563;
+}
+QLabel#stepLabel {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #047857;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    font-weight: 600;
+    max-width: 200px;
+}
+
+QPushButton {
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 14px 24px;
+}
+QPushButton#primaryButton {
+    color: white;
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1,
+        stop:0 #10B981, stop:1 #059669);
+    border: none;
+}
+QPushButton#primaryButton:hover {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1,
+        stop:0 #059669, stop:1 #10B981);
+}
+QPushButton#secondaryButton {
+    color: #374151;
+    background-color: white;
+    border: 1px solid #D1D5DB;
+}
+QPushButton#secondaryButton:hover {
+    background-color: #F9FAFB;
+}
+
+QLineEdit, QSpinBox {
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    background-color: #F9FAFB;
+}
+QLineEdit:focus, QSpinBox:focus {
+    border-color: #10B981;
+}
+QRadioButton {
+    font-size: 14px;
+}
+QRadioButton::indicator {
+    width: 20px;
+    height: 20px;
+}
+QRadioButton::indicator::unchecked {
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    background-color: white;
+}
+QRadioButton::indicator::checked {
+    border: 2px solid #10B981;
+    border-radius: 10px;
+    background-color: #10B981;
+}
+
+QWidget#card, QWidget#formCard {
+    background-color: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 24px;
+}
+
+QWidget#guideBox {
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    padding: 24px;
+}
