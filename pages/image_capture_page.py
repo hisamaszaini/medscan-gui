@@ -1,5 +1,4 @@
 import sys
-import cv2
 import qtawesome as qta
 
 from PySide6.QtCore import Qt, QTimer, QSize, Signal
@@ -10,11 +9,7 @@ from PySide6.QtWidgets import (
 )
 from components.header import Header
 
-try:
-	from picamera2 import Picamera2
-	PICAMERA_AVAILABLE = True
-except ImportError:
-	PICAMERA_AVAILABLE = False
+from picamera2 import Picamera2
 
 class ImageCapturePage(QWidget):
 	imageReady = Signal(QPixmap)
@@ -28,10 +23,9 @@ class ImageCapturePage(QWidget):
 			"malnutrisi": "Fokus pada wajah subjek, terutama pipi dan dagu."
 		}
 		self.captured_pixmap = None
-		self.capture = None
 		self.picam = None
 		self.timer = QTimer(self)
-		self.timer.timeout.connect(self.update_frame_generic)
+		self.timer.timeout.connect(self.update_frame_picam)
 		self.init_ui()
 		self.connect_signals()
 
@@ -90,11 +84,11 @@ class ImageCapturePage(QWidget):
 		# Tambahkan video display
 		camera_col.addWidget(self.video_display)
 
-		# Spacer untuk jarak konsisten
+		# Spacer
 		spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
 		camera_col.addItem(spacer)
 
-		# Tambahkan tombol
+		# Tombol
 		camera_col.addLayout(button_layout)
 
 		# Guide Box
@@ -151,64 +145,21 @@ class ImageCapturePage(QWidget):
 		self.captured_pixmap = None
 		self.video_display.setText("Menyalakan Kamera...")
 
-		# Pilih kamera berdasarkan tipe screening
 		camera_index = 1 if screening_type == "diabetic_retinopathy" else 0
-
-		if PICAMERA_AVAILABLE:
-			try:
-				# Tentukan nama kamera Picamera2 sesuai index
-				camera_name = "camera1" if camera_index == 1 else "camera0"
-				self.picam = Picamera2(camera_name=camera_name)
-				config = self.picam.create_preview_configuration(main={"size": (640, 480)})
-				self.picam.configure(config)
-				self.picam.start()
-				self.capture_button.setEnabled(True)
-				self.timer.timeout.connect(self.update_frame_picam)
-				self.timer.start(30)
-			except Exception as e:
-				self.video_display.setText(f"Gagal membuka Picamera2: {e}")
-				self.capture_button.setEnabled(False)
-		else:
-			# Fallback ke OpenCV
-			self.capture = cv2.VideoCapture(camera_index)
-			if not self.capture.isOpened():
-				self.video_display.setText("Error: Gagal membuka kamera.")
-				self.capture_button.setEnabled(False)
-				return
-			self.capture_button.setEnabled(True)
-			self.timer.timeout.connect(self.update_frame)
-			self.timer.start(30)
+		camera_name = "camera1" if camera_index == 1 else "camera0"
+		self.picam = Picamera2(camera_name=camera_name)
+		config = self.picam.create_preview_configuration(main={"size": (640, 480)})
+		self.picam.configure(config)
+		self.picam.start()
+		self.capture_button.setEnabled(True)
+		self.timer.start(30)
 
 	def stop_camera(self):
 		self.timer.stop()
-		if self.capture:
-			self.capture.release()
-			self.capture = None
 		if self.picam:
 			self.picam.stop()
 			self.picam.close()
 			self.picam = None
-
-	def update_frame_generic(self):
-		if PICAMERA_AVAILABLE and self.picam:
-			self.update_frame_picam()
-		elif self.capture:
-			self.update_frame()
-
-	def update_frame(self):
-		if not self.capture:
-			return
-		ret, frame = self.capture.read()
-		if ret:
-			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-			frame = cv2.flip(frame, 1)
-			h, w, ch = frame.shape
-			bytes_per_line = ch * w
-			q_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
-			pixmap = QPixmap.fromImage(q_image)
-			self.video_display.setPixmap(pixmap.scaled(
-				self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
-			))
 
 	def update_frame_picam(self):
 		if not self.picam:
@@ -224,20 +175,11 @@ class ImageCapturePage(QWidget):
 		))
 
 	def on_capture_clicked(self):
-		if PICAMERA_AVAILABLE and self.picam:
-			frame = self.picam.capture_array()
-			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-		elif self.capture and self.capture.isOpened():
-			ret, frame = self.capture.read()
-			if not ret:
-				QMessageBox.warning(self, "Kamera Error", "Gagal mengambil gambar dari kamera.")
-				return
-			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-			frame = cv2.flip(frame, 1)
-		else:
+		if not self.picam:
 			QMessageBox.warning(self, "Kamera Error", "Kamera tidak aktif.")
 			return
-
+		frame = self.picam.capture_array()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 		h, w, ch = frame.shape
 		bytes_per_line = ch * w
 		q_image = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
