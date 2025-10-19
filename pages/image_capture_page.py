@@ -175,6 +175,58 @@ class ImageCapturePage(QWidget):
             try:
                 self.picam = Picamera2(camera_num=camera_num)
                 
+                # Gunakan lores untuk preview (RGB888), main untuk full-res jika perlu
+                config = self.picam.create_still_configuration(
+                    main={"size": (3280, 2464)},  # resolusi penuh
+                    lores={"size": (640, 480)},   # preview untuk display
+                    display="lores"
+                )
+                self.picam.configure(config)
+                
+                print("Memulai Picamera2 dan stabilisasi AE/AWB...")
+                self.picam.start()
+                QTimer.singleShot(1500, lambda: self.timer.start(30))  # start timer setelah AE/AWB stabil
+                self.timer.timeout.connect(self.update_frame_picam)
+                self.capture_button.setEnabled(True)
+                print("Picamera2 siap untuk preview.")
+                return
+            except Exception as e:
+                print(f"Gagal membuka Picamera2 (idx {camera_num}): {e}\nMencoba OpenCV...")
+                if self.picam:
+                    self.picam.close()
+                    self.picam = None
+
+        # Fallback OpenCV
+        print(f"Menggunakan fallback OpenCV untuk kamera {camera_num}...")
+        self.capture = cv2.VideoCapture(camera_num)
+        if not self.capture.isOpened():
+            self.video_display.setText(f"Error: Gagal membuka kamera (idx {camera_num}).")
+            self.capture_button.setEnabled(False)
+            return
+        
+        print("Menunggu kamera OpenCV...")
+        QTimer.singleShot(1000, lambda: self.timer.start(30))  # beri waktu stabilisasi
+        self.timer.timeout.connect(self.update_frame)
+        self.capture_button.setEnabled(True)
+        print("Kamera OpenCV siap.")
+
+
+        """
+        Inisialisasi dan mulai stream kamera.
+        Menggunakan Picamera2 jika tersedia, jika tidak, fallback ke OpenCV.
+        """
+        self.subtitle_guide.setText(self.guides.get(screening_type, "..."))
+        self.captured_pixmap = None
+        self.video_display.setText("Menyalakan Kamera...")
+
+        self.stop_camera()
+
+        camera_num = 1 if screening_type == "diabetic_retinopathy" else 0
+
+        if PICAMERA_AVAILABLE:
+            try:
+                self.picam = Picamera2(camera_num=camera_num)
+                
                 # Konfigurasi 2-stream untuk kualitas tinggi
                 config = self.picam.create_still_configuration(
                     main={"size": (640, 480)},
@@ -281,17 +333,23 @@ class ImageCapturePage(QWidget):
         return QPixmap.fromImage(q_image)
 
     def on_capture_clicked(self):
-        """Mengambil gambar diam dari stream yang aktif."""
+        """Mengambil gambar diam dari stream yang aktif dengan warna asli."""
         frame_rgb = None
         
         if self.picam:
-            self.timer.stop()  # Hentikan preview
-            print("Mengambil foto resolusi penuh (main stream)...")
+            print("Mengambil foto dari Picamera2 (main stream)...")
             try:
-                # Ambil dari stream "main" (resolusi penuh dan warna asli)
-                frame_rgb = self.picam.switch_mode_and_capture_array("main")
-                
-                # Resize agar tetap sesuai display (opsional)
+                # Ambil frame dari main stream resolusi penuh
+                frame_raw = self.picam.switch_mode_and_capture_array("main")
+
+                # Pastikan format RGB (Picamera2 biasanya RAW/YUV)
+                if len(frame_raw.shape) == 2 or frame_raw.shape[2] != 3:
+                    # convert YUV/RAW ke RGB menggunakan Picamera2 conversion helper
+                    frame_rgb = cv2.cvtColor(frame_raw, cv2.COLOR_BAYER_BG2RGB)
+                else:
+                    frame_rgb = frame_raw
+
+                # Resize agar sesuai display
                 frame_rgb_resized = cv2.resize(frame_rgb, (640, 480), interpolation=cv2.INTER_LINEAR)
                 
                 self.captured_pixmap = self._convert_frame_to_pixmap(frame_rgb_resized)
@@ -300,10 +358,9 @@ class ImageCapturePage(QWidget):
                 ))
                 print("Foto Picamera2 berhasil diambil dengan warna normal.")
             except Exception as e:
-                QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto full-res: {e}")
-                self.timer.start(30)  # Mulai lagi preview jika gagal
+                QMessageBox.warning(self, "Kamera Error", f"Gagal mengambil foto: {e}")
                 return
-            
+        
         elif self.capture and self.capture.isOpened():
             print("Mengambil foto dari OpenCV...")
             ret, frame = self.capture.read()
@@ -317,12 +374,13 @@ class ImageCapturePage(QWidget):
                 self.video_display.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
             ))
             print("Foto OpenCV berhasil diambil.")
+
         else:
             QMessageBox.warning(self, "Kamera Error", "Kamera tidak aktif.")
             return
 
-        # Jangan stop_camera() di sini supaya on_next_clicked bisa memeriksa captured_pixmap
-        # self.stop_camera()
+        # Jangan stop_camera() di sini agar tombol Next bisa memeriksa captured_pixmap
+
 
     def on_upload_clicked(self):
         """Buka dialog file untuk memilih gambar."""
