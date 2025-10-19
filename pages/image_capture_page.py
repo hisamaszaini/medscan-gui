@@ -1,3 +1,18 @@
+import sys
+import cv2
+import time
+import qtawesome as qta
+
+from PySide6.QtCore import Qt, QTimer, QSize, Signal
+from PySide6.QtGui import QPixmap, QImage, QFont, QCloseEvent
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
+    QMessageBox, QFileDialog, QSpacerItem, QSizePolicy
+)
+from picamera2 import Picamera2
+
+from components.header import Header
+
 class ImageCapturePage(QWidget):
 	"""
 	Widget halaman untuk mengambil atau mengupload gambar,
